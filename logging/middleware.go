@@ -14,7 +14,7 @@ import (
 
 // Middleware is a middleware for writing request logs in a stuctured
 // format to stackdriver.
-func Middleware(log *zap.SugaredLogger, projectID string) func(http.Handler) http.Handler {
+func Middleware(log *zap.Logger, projectID string) func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			payload := zapdriver.NewHTTP(r, nil)
@@ -30,7 +30,7 @@ func Middleware(log *zap.SugaredLogger, projectID string) func(http.Handler) htt
 			}
 			fields = append(fields, zapdriver.HTTP(payload))
 
-			log.Infow("completed request", fields...)
+			log.Info("completed request", fields...)
 		})
 	}
 }
