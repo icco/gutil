@@ -8,7 +8,7 @@ import (
 )
 
 // NewLogger creates a logger with stackdriver settings.
-func NewLogger(serviceName string) (*zap.Logger, error) {
+func NewLogger(serviceName string) (*zap.SugaredLogger, error) {
 	logger, err := zapdriver.NewProductionWithCore(zapdriver.WrapCore(
 		zapdriver.ReportAllErrors(true),
 		zapdriver.ServiceName(serviceName),
@@ -20,11 +20,11 @@ func NewLogger(serviceName string) (*zap.Logger, error) {
 	defer logger.Sync()
 	logger.Debug("created logger")
 
-	return logger, nil
+	return logger.Sugar(), nil
 }
 
 // Must panics if the logger can not be created.
-func Must(log *zap.Logger, err error) *zap.Logger {
+func Must(log *zap.SugaredLogger, err error) *zap.SugaredLogger {
 	if err != nil {
 		panic(err)
 	}
