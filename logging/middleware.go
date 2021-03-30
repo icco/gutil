@@ -35,6 +35,8 @@ func Middleware(log *zap.Logger, projectID string) func(http.Handler) http.Handl
 	}
 }
 
+// ParseTraceHeader takes a GCP trace header and translates it to a trace,
+// span, and whether or not this was sampled.
 func ParseTraceHeader(header string) (string, string, bool) {
 	if header == "" {
 		return "", "", false
