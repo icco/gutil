@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/blendle/zapdriver"
 	"github.com/felixge/httpsnoop"
+	"github.com/icco/zapdriver"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

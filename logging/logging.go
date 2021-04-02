@@ -3,7 +3,7 @@ package logging
 import (
 	"fmt"
 
-	"github.com/blendle/zapdriver"
+	"github.com/icco/zapdriver"
 	"go.uber.org/zap"
 )
 
