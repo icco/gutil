@@ -9,11 +9,13 @@ import (
 
 // NewLogger creates a logger with stackdriver settings.
 func NewLogger(serviceName string) (*zap.SugaredLogger, error) {
-	logger, err := zapdriver.NewProductionWithCore(zapdriver.WrapCore(
+	config := zapdriver.NewProductionConfig()
+	config.Level.SetLevel(zap.DebugLevel)
+
+	logger, err := config.Build(zapdriver.WrapCore(
 		zapdriver.ReportAllErrors(true),
 		zapdriver.ServiceName(serviceName),
 	))
-
 	if err != nil {
 		return nil, fmt.Errorf("logger create: %w", err)
 	}
