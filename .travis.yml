@@ -8,7 +8,9 @@ env:
 script:
   - go test -v -cover ./...
   - go vet ./...
+  - go get -v -u -d golang.org/x/lint/golint
   - go run golang.org/x/lint/golint -set_exit_status ./...
+  - go get -v -u -d github.com/fzipp/gocyclo/cmd/gocyclo
   - go run github.com/fzipp/gocyclo/cmd/gocyclo -avg .
 notifications:
   email:
