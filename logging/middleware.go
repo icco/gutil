@@ -3,36 +3,53 @@ package logging
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
+	"time"
 
-	"github.com/felixge/httpsnoop"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/icco/zapdriver"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // Middleware is a middleware for writing request logs in a stuctured
 // format to stackdriver.
-func Middleware(log *zap.Logger, projectID string) func(http.Handler) http.Handler {
-	return func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			payload := zapdriver.NewHTTP(r, nil)
-			m := httpsnoop.CaptureMetrics(handler, w, r)
-			payload.Status = m.Code
-			payload.Latency = fmt.Sprintf("%.9fs", m.Duration.Seconds())
-			payload.ResponseSize = strconv.FormatInt(m.Written, 10)
+func Middleware(log *zap.Logger, projectID string) func(next http.Handler) http.Handler {
+	return chi.Chain(
+		middleware.RequestID,
+		Handler(log, projectID),
+		middleware.Recoverer,
+	).Handler
+}
 
-			var fields []zapcore.Field
-			trace, span, sampled := ParseTraceHeader(r.Header.Get("X-Cloud-Trace-Context"))
-			if trace != "" {
-				fields = append(fields, zapdriver.TraceContext(trace, span, sampled, projectID)...)
-			}
-			fields = append(fields, zapdriver.HTTP(payload))
+func Handler(logger *zap.Logger) func(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		var requestID string
+		if reqID := r.Context().Value(middleware.RequestIDKey); reqID != nil {
+			requestID = reqID.(string)
+		}
 
-			log.Info("completed request", fields...)
-		})
-	}
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		next.ServeHTTP(ww, r)
+
+		payload := zapdriver.NewHTTP(r, ww)
+		payload.Status = ww.Status()
+		payload.Latency = fmt.Sprintf("%.9fs", latency.Seconds())
+
+		trace, span, sampled := ParseTraceHeader(r.Header.Get("X-Cloud-Trace-Context"))
+		if trace != "" {
+			fields = append(fields, zapdriver.TraceContext(trace, span, sampled, projectID)...)
+		}
+		fields = append(fields, zapdriver.HTTP(payload))
+
+		latency := time.Since(start)
+		if requestID != "" {
+			fields = append(fields, zap.String("request-id", requestID))
+		}
+
+		logger.Info("request completed", fields...)
+	})
 }
 
 // ParseTraceHeader takes a GCP trace header and translates it to a trace,
