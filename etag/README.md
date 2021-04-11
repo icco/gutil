@@ -23,11 +23,11 @@ import (
 )
 
 func main() {
-	r := chi.NewRouter()
+  r := chi.NewRouter()
   r.Use(etag.Handler(false))
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
-	http.ListenAndServe(":3000", r)
+  r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("welcome"))
+  })
+  http.ListenAndServe(":3000", r)
 }
 ```
