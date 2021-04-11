@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/go-http-utils/fresh"
+	"github.com/go-http-utils/headers"
 )
 
 // Version is this package's version.
@@ -59,7 +60,7 @@ func Handler(weak bool) func(next http.Handler) http.Handler {
 			resHeader := res.Header()
 
 			if hw.hash == nil ||
-				resHeader.Get("ETag") != "" ||
+				resHeader.Get(headers.ETag) != "" ||
 				strconv.Itoa(hw.status)[0] != '2' ||
 				hw.status == http.StatusNoContent ||
 				hw.buf.Len() == 0 {
@@ -74,7 +75,7 @@ func Handler(weak bool) func(next http.Handler) http.Handler {
 				etag = "W/" + etag
 			}
 
-			resHeader.Set("ETag", etag)
+			resHeader.Set(headers.ETag, etag)
 
 			if fresh.IsFresh(req.Header, resHeader) {
 				res.WriteHeader(http.StatusNotModified)
