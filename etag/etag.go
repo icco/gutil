@@ -51,36 +51,38 @@ func writeRaw(res http.ResponseWriter, hw hashWriter) {
 }
 
 // Handler wraps the http.Handler h with ETag support.
-func Handler(h http.Handler, weak bool) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		hw := hashWriter{rw: res, hash: sha1.New(), buf: bytes.NewBuffer(nil)}
-		h.ServeHTTP(&hw, req)
+func Handler(weak bool) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			hw := hashWriter{rw: res, hash: sha1.New(), buf: bytes.NewBuffer(nil)}
+			h.ServeHTTP(&hw, req)
 
-		resHeader := res.Header()
+			resHeader := res.Header()
 
-		if hw.hash == nil ||
-			resHeader.Get(headers.ETag) != "" ||
-			strconv.Itoa(hw.status)[0] != '2' ||
-			hw.status == http.StatusNoContent ||
-			hw.buf.Len() == 0 {
-			writeRaw(res, hw)
-			return
-		}
+			if hw.hash == nil ||
+				resHeader.Get(headers.ETag) != "" ||
+				strconv.Itoa(hw.status)[0] != '2' ||
+				hw.status == http.StatusNoContent ||
+				hw.buf.Len() == 0 {
+				writeRaw(res, hw)
+				return
+			}
 
-		etag := fmt.Sprintf("%v-%v", strconv.Itoa(hw.len),
-			hex.EncodeToString(hw.hash.Sum(nil)))
+			etag := fmt.Sprintf("%v-%v", strconv.Itoa(hw.len),
+				hex.EncodeToString(hw.hash.Sum(nil)))
 
-		if weak {
-			etag = "W/" + etag
-		}
+			if weak {
+				etag = "W/" + etag
+			}
 
-		resHeader.Set(headers.ETag, etag)
+			resHeader.Set(headers.ETag, etag)
 
-		if fresh.IsFresh(req.Header, resHeader) {
-			res.WriteHeader(http.StatusNotModified)
-			res.Write(nil)
-		} else {
-			writeRaw(res, hw)
-		}
-	})
+			if fresh.IsFresh(req.Header, resHeader) {
+				res.WriteHeader(http.StatusNotModified)
+				res.Write(nil)
+			} else {
+				writeRaw(res, hw)
+			}
+		})
+	}
 }
