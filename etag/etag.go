@@ -55,7 +55,7 @@ func Handler(weak bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			hw := hashWriter{rw: res, hash: sha1.New(), buf: bytes.NewBuffer(nil)}
-			h.ServeHTTP(&hw, req)
+			next.ServeHTTP(&hw, req)
 
 			resHeader := res.Header()
 

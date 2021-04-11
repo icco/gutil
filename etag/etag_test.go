@@ -24,7 +24,7 @@ type EmptyEtagSuite struct {
 
 func (s *EmptyEtagSuite) SetupTest() {
 	mux := http.NewServeMux()
-	mux.Handle("/", Handler(http.HandlerFunc(emptyHandlerFunc), false))
+	mux.Handle("/", Handler(false)(http.HandlerFunc(emptyHandlerFunc)))
 
 	s.server = httptest.NewServer(mux)
 }
@@ -50,12 +50,12 @@ type EtagSuite struct {
 
 func (s *EtagSuite) SetupTest() {
 	mux := http.NewServeMux()
-	mux.Handle("/", Handler(http.HandlerFunc(handlerFunc), false))
+	mux.Handle("/", Handler(false)(http.HandlerFunc(emptyHandlerFunc)))
 
 	s.server = httptest.NewServer(mux)
 
 	wmux := http.NewServeMux()
-	wmux.Handle("/", Handler(http.HandlerFunc(handlerFunc), true))
+	mux.Handle("/", Handler(true)(http.HandlerFunc(emptyHandlerFunc)))
 
 	s.weakServer = httptest.NewServer(wmux)
 }
