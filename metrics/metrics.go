@@ -46,8 +46,8 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 			log.Errorw("stackdriver trace error", zap.Error(err))
 		}),
 	}
-	topts := []trace.Option{
-		trace.WithSampler(sdktrace.AlwaysSample()),
+	topts := []trace.TracerProviderOption{
+		trace.WithSampler(trace.AlwaysSample()),
 		trace.WithResource(resource.NewWithAttributes(semconv.ServiceNameKey.String(serviceName))),
 	}
 	tp, _, err := texporter.NewExportPipeline(opts, topts...)
@@ -66,7 +66,6 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName string) error {
 	opts := []mexporter.Option{
 		mexporter.WithProjectID(projectID),
-		mexporter.WithContext(ctx),
 		mexporter.WithOnError(func(err error) {
 			log.Errorw("stackdriver metric error", zap.Error(err))
 		}),
