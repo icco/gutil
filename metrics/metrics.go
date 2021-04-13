@@ -21,6 +21,18 @@ func (eh *errHandler) Handle(err error) {
 	eh.log.Errorw("otel error", zap.Error(err))
 }
 
+// Init sets up a default trace and metric provider.
+func Init(ctx context.Context, log *zap.SugaredLogger, projectID string) error {
+	if err := TraceInit(ctx, log, projectID); err != nil {
+		return err
+	}
+	if err := MetricInit(ctx, log, projectID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // TraceInit sets up a default tracer for open telemetry.
 func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID string) error {
 	opts := []texporter.Option{
