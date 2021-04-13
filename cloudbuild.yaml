@@ -11,17 +11,15 @@ steps:
 - name: 'golang'
   entrypoint: 'go'
   args:
-  - "test"
+  - "build"
   - "-v"
   - "./..."
 - name: 'golang'
   entrypoint: 'go'
   args:
-  - "build"
+  - "test"
   - "-v"
   - "./..."
-  env:
-  - GOPROXY=https://proxy.golang.org
 options:
   volumes:
   - name: go-modules
