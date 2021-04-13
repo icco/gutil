@@ -74,7 +74,7 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 		basic.WithResource(resource.NewWithAttributes(semconv.ServiceNameKey.String(serviceName))),
 	}
 
-	pusher, err := mexporter.InstallNewPipeline(opts, popts...)
+	_, err := mexporter.InstallNewPipeline(opts, popts...)
 	if err != nil {
 		return fmt.Errorf("metric exporter init: %w", err)
 	}
