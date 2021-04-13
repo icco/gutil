@@ -1,0 +1,28 @@
+steps:
+- name: 'golang'
+  entrypoint: 'go'
+  args:
+  - "get"
+  - "-v"
+  - "-d"
+  - "./..."
+  env:
+  - GOPROXY=https://proxy.golang.org
+- name: 'golang'
+  entrypoint: 'go'
+  args:
+  - "test"
+  - "-v"
+  - "./..."
+- name: 'golang'
+  entrypoint: 'go'
+  args:
+  - "build"
+  - "-v"
+  - "./..."
+  env:
+  - GOPROXY=https://proxy.golang.org
+options:
+  volumes:
+  - name: go-modules
+    path: /go
