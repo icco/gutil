@@ -50,7 +50,7 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 		trace.WithSampler(sdktrace.AlwaysSample()),
 		trace.WithResource(resource.NewWithAttributes(semconv.ServiceNameKey.String(serviceName))),
 	}
-	tp, err := texporter.NewExportPipeline(opts, topts...)
+	tp, _, err := texporter.NewExportPipeline(opts, topts...)
 	if err != nil {
 		return fmt.Errorf("trace exporter init: %w", err)
 	}
