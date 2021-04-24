@@ -18,6 +18,7 @@ import (
 // included (RequestID and Recoverer).
 func Middleware(log *zap.Logger, projectID string) func(next http.Handler) http.Handler {
 	return chi.Chain(
+		middleware.RealIP,
 		middleware.RequestID,
 		Handler(log, projectID),
 		middleware.Recoverer,
