@@ -82,7 +82,7 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 	return nil
 }
 
-// Create http middleware.
+// Middleware adds a open tracing http.
 func Middleware(next http.HandlerFunc) http.Handler {
 	return otelhttp.NewHandler(next, "http")
 }
