@@ -48,7 +48,7 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 	}
 	topts := []trace.TracerProviderOption{
 		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(resource.NewWithAttributes(semconv.ServiceNameKey.String(serviceName))),
+		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
 	}
 	tp, _, err := texporter.NewExportPipeline(opts, topts...)
 	if err != nil {
@@ -71,7 +71,7 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 		}),
 	}
 	popts := []basic.Option{
-		basic.WithResource(resource.NewWithAttributes(semconv.ServiceNameKey.String(serviceName))),
+		basic.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
 	}
 
 	_, err := mexporter.InstallNewPipeline(opts, popts...)
