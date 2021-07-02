@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Middleware is a middleware for writing request logs in a stuctured format to
+// Middleware is a middleware for writing request logs in a structured format to
 // stackdriver. It uses a chi Chain to make sure all of the deps are properly
 // included (RequestID and Recoverer).
 func Middleware(log *zap.Logger, projectID string) func(next http.Handler) http.Handler {
