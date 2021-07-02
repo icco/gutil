@@ -47,7 +47,9 @@ func (hw *hashWriter) Write(b []byte) (int, error) {
 
 func writeRaw(res http.ResponseWriter, hw hashWriter) {
 	res.WriteHeader(hw.status)
-	res.Write(hw.buf.Bytes())
+	if _, err := res.Write(hw.buf.Bytes()); err != nil {
+		panic(fmt.Errorf("could not write: %w", err))
+	}
 }
 
 // Handler wraps the http.Handler h with ETag support.
@@ -79,7 +81,9 @@ func Handler(weak bool) func(next http.Handler) http.Handler {
 
 			if fresh.IsFresh(req.Header, resHeader) {
 				res.WriteHeader(http.StatusNotModified)
-				res.Write(nil)
+				if _, err := res.Write(nil); err != nil {
+					panic(fmt.Errorf("could not write: %w", err))
+				}
 			} else {
 				writeRaw(res, hw)
 			}
