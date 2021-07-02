@@ -19,7 +19,13 @@ func NewLogger(serviceName string) (*zap.SugaredLogger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("logger create: %w", err)
 	}
-	defer logger.Sync()
+
+	// defer a func so we can check the error.
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Fatal("could not sync logger", zap.Error(err))
+		}
+	}()
 	logger.Debug("created logger")
 
 	return logger.Sugar(), nil
