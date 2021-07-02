@@ -4,8 +4,8 @@ go 1.16
 
 require (
 	cloud.google.com/go v0.86.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.20.1
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v0.20.1
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.20.1-0.20210624173458-150c8dab3e9a
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v0.20.1-0.20210624173458-150c8dab3e9a
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
