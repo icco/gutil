@@ -39,24 +39,24 @@ func Init(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName st
 
 // TraceInit sets up a default tracer for open telemetry.
 func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName string) error {
-	opts := []texporter.Option{
+	eh := &errHandler{log: log}
+	eopts := []texporter.Option{
 		texporter.WithProjectID(projectID),
 		texporter.WithContext(ctx),
-		texporter.WithOnError(func(err error) {
-			log.Errorw("stackdriver trace error", zap.Error(err))
-		}),
+		texporter.WithErrorHandler(eh),
 	}
-	topts := []trace.TracerProviderOption{
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
-	}
-	tp, _, err := texporter.NewExportPipeline(opts, topts...)
+	exporter, err := texporter.New(eopts...)
 	if err != nil {
 		return fmt.Errorf("trace exporter init: %w", err)
 	}
-	otel.SetTracerProvider(tp)
 
-	eh := &errHandler{log: log}
+	topts := []trace.TracerProviderOption{
+		trace.WithBatcher(exporter),
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
+	}
+	tp := trace.NewTracerProvider(topts...)
+	otel.SetTracerProvider(tp)
 	otel.SetErrorHandler(eh)
 
 	return nil
