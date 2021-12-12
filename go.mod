@@ -3,6 +3,7 @@ module github.com/icco/gutil
 go 1.16
 
 require (
+	cloud.google.com/go/trace v1.0.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.24.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.0.0
 	github.com/go-chi/chi/v5 v5.0.7
@@ -11,7 +12,7 @@ require (
 	github.com/icco/zapdriver v1.4.0
 	github.com/unrolled/render v1.4.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.24.0
-	go.opentelemetry.io/otel v1.0.1
+	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/sdk v1.0.1
 	go.opentelemetry.io/otel/sdk/metric v0.24.0
 	go.uber.org/zap v1.19.1
