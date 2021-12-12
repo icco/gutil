@@ -10,9 +10,9 @@ require (
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/icco/zapdriver v1.4.0
 	github.com/unrolled/render v1.4.1
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.28.0
-	go.opentelemetry.io/otel v1.3.0
-	go.opentelemetry.io/otel/sdk v1.3.0
-	go.opentelemetry.io/otel/sdk/metric v0.26.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.24.0
+	go.opentelemetry.io/otel v1.0.1
+	go.opentelemetry.io/otel/sdk v1.0.1
+	go.opentelemetry.io/otel/sdk/metric v0.24.0
 	go.uber.org/zap v1.19.1
 )
