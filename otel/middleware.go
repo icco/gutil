@@ -7,6 +7,6 @@ import (
 )
 
 // Middleware adds a open tracing http middleware.
-func Middleware(next http.HandlerFunc) http.Handler {
+func Middleware(next http.Handler) http.Handler {
 	return otelhttp.NewHandler(next, "http")
 }
