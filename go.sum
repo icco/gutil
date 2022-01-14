@@ -63,6 +63,8 @@ github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v1.0.
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.0.1-0.20220111155622-771af0772772 h1:LzvRqwcfmatFvISBuvsfbDLIn1daTVNkfZ5M5zc9jAA=
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.0.1-0.20220111155622-771af0772772/go.mod h1:xf7DVNdlV94XmcH+2be5JSPdAfrZg7NCXXXlihOViXU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/XSAM/otelsql v0.10.0 h1:y8o7q4NaZEV0dBiUC7TuNTHNKyDaX3Z4anntNu7dfYw=
+github.com/XSAM/otelsql v0.10.0/go.mod h1:7n9dZASOnVJncMmBPQjL5OdjQosb5gryCgsgNISnJVo=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/benbjohnson/clock v1.3.0 h1:ip6w0uFQkncKQ979AypyG0ER7mqUSBdKLOgAle/AT8A=
