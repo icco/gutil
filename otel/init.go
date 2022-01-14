@@ -1,13 +1,11 @@
-package metrics
+package otel
 
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -80,9 +78,4 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 	}
 
 	return nil
-}
-
-// Middleware adds a open tracing http.
-func Middleware(next http.HandlerFunc) http.Handler {
-	return otelhttp.NewHandler(next, "http")
 }
