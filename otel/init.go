@@ -15,12 +15,13 @@ import (
 )
 
 type errHandler struct {
-	log *zap.SugaredLogger
+	log   *zap.SugaredLogger
+	owner string
 }
 
 // Handle logs an error to Zap.
 func (eh *errHandler) Handle(err error) {
-	eh.log.Errorw("otel error", zap.Error(err))
+	eh.log.Errorw(fmt.Sprintf("otel %s error", eh.owner), zap.Error(err))
 }
 
 // Init sets up a default trace and metric provider.
@@ -28,6 +29,7 @@ func Init(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName st
 	if err := TraceInit(ctx, log, projectID, serviceName); err != nil {
 		return err
 	}
+
 	if err := MetricInit(ctx, log, projectID, serviceName); err != nil {
 		return err
 	}
@@ -37,11 +39,11 @@ func Init(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName st
 
 // TraceInit sets up a default tracer for open telemetry.
 func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName string) error {
-	eh := &errHandler{log: log}
+	teh := &errHandler{log: log, owner: "gcp trace"}
 	eopts := []texporter.Option{
 		texporter.WithProjectID(projectID),
 		texporter.WithContext(ctx),
-		texporter.WithErrorHandler(eh),
+		texporter.WithErrorHandler(teh),
 	}
 	exporter, err := texporter.New(eopts...)
 	if err != nil {
@@ -55,7 +57,10 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 	}
 	tp := trace.NewTracerProvider(topts...)
 	otel.SetTracerProvider(tp)
-	otel.SetErrorHandler(eh)
+	defer tp.Shutdown(context.Background())
+
+	oeh := &errHandler{log: log, owner: "otel trace"}
+	otel.SetErrorHandler(oeh)
 
 	return nil
 }
