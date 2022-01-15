@@ -12,7 +12,6 @@ func Middleware(next http.Handler) http.Handler {
 	return otelhttp.NewHandler(
 		next,
 		"http",
-		otelhttp.WithPublicEndpoint(),
 		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
 			return fmt.Sprintf("%s:%s", r.Method, r.URL.Path)
 		}),
