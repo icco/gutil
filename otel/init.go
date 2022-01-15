@@ -39,11 +39,11 @@ func Init(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName st
 
 // TraceInit sets up a default tracer for open telemetry.
 func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName string) error {
-	teh := &errHandler{log: log, owner: "gcp trace"}
+	traceEh := &errHandler{log: log, owner: "gcp trace"}
 	eopts := []texporter.Option{
 		texporter.WithProjectID(projectID),
 		texporter.WithContext(ctx),
-		texporter.WithErrorHandler(teh),
+		texporter.WithErrorHandler(traceEh),
 	}
 	exporter, err := texporter.New(eopts...)
 	if err != nil {
@@ -57,7 +57,11 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 	}
 	tp := trace.NewTracerProvider(topts...)
 	otel.SetTracerProvider(tp)
-	defer tp.Shutdown(context.Background())
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatalw("shutting down tracer provider error", zap.Error(err))
+		}
+	}()
 
 	oeh := &errHandler{log: log, owner: "otel trace"}
 	otel.SetErrorHandler(oeh)
