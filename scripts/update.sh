@@ -11,7 +11,7 @@ for i in $(cat ./repos.txt); do
   git diff
   git ci -a -m 'update gutil'
   go get -v -u -d  ./...
-  go mod tidy
+  go mod tidy -compat=1.17
   go build -v ./...
   git ci -a -m 'update'
   git push -u
