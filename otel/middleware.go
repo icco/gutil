@@ -1,6 +1,7 @@
 package otel
 
 import (
+	"fmt"
 	"net/http"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -8,5 +9,12 @@ import (
 
 // Middleware adds a open tracing http middleware.
 func Middleware(next http.Handler) http.Handler {
-	return otelhttp.NewHandler(next, "http")
+	return otelhttp.NewHandler(
+		next,
+		"http",
+		otelhttp.WithPublicEndpoint(),
+		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+			return fmt.Sprintf("%s:%s", r.Method, r.URL.Path)
+		}),
+	)
 }
