@@ -63,7 +63,7 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 		}
 	}()
 
-	oeh := &errHandler{log: log, owner: "otel trace"}
+	oeh := &errHandler{log: log, owner: "trace"}
 	otel.SetErrorHandler(oeh)
 
 	return nil
