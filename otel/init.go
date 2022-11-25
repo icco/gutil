@@ -7,7 +7,6 @@ import (
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
@@ -76,13 +75,10 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 		mexporter.WithOnError(func(err error) {
 			log.Errorw("stackdriver metric error", zap.Error(err))
 		}),
-	}
-	popts := []basic.Option{
-		basic.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
+		mexporter.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
 	}
 
-	_, err := mexporter.InstallNewPipeline(opts, popts...)
-	if err != nil {
+	if _, err := mexporter.InstallNewPipeline(opts); err != nil {
 		return fmt.Errorf("metric exporter init: %w", err)
 	}
 
