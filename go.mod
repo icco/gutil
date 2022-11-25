@@ -1,6 +1,6 @@
 module github.com/icco/gutil
 
-go 1.17
+go 1.18
 
 require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.26.0
