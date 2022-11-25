@@ -23,7 +23,7 @@ func NewLogger(serviceName string) (*zap.SugaredLogger, error) {
 	// defer a func so we can check the error.
 	defer func() {
 		if err := logger.Sync(); err != nil {
-			// logger.Warn("could not sync logger", zap.Error(err))
+			logger.Debug("could not sync logger", zap.Error(err))
 		}
 	}()
 
