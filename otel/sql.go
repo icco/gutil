@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/XSAM/otelsql"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
 func InitPostgres() (string, error) {
 	// Register an OTel driver
-	driverName, err := otelsql.Register("postgres", semconv.DBSystemPostgreSQL.Value.AsString())
+	driverName, err := otelsql.Register("postgres")
 	if err != nil {
 		return "", fmt.Errorf("could not create postgres otel: %w", err)
 	}
