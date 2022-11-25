@@ -7,9 +7,11 @@ import (
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	"go.opentelemetry.io/otel/semconv"
 	"go.uber.org/zap"
 )
 
@@ -70,17 +72,18 @@ func TraceInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceNa
 
 // MetricInit sets up a default metric provider for open telemetry.
 func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceName string) error {
-	opts := []mexporter.Option{
-		mexporter.WithProjectID(projectID),
-		mexporter.WithOnError(func(err error) {
-			log.Errorw("stackdriver metric error", zap.Error(err))
-		}),
-		mexporter.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))),
-	}
-
-	if _, err := mexporter.InstallNewPipeline(opts); err != nil {
+	exporter, err := mexporter.New(mexporter.WithProjectID(projectID))
+	if err != nil {
 		return fmt.Errorf("metric exporter init: %w", err)
 	}
+
+	rsrc := resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String(serviceName))
+	// initialize a MeterProvider with that periodically exports to the GCP exporter.
+	provider := metric.NewMeterProvider(
+		metric.WithReader(metric.NewPeriodicReader(exporter)),
+		metric.WithResource(rsrc),
+	)
+	global.SetMeterProvider(provider)
 
 	return nil
 }
