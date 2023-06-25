@@ -7,11 +7,10 @@ import (
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 	"go.uber.org/zap"
 )
 
@@ -83,7 +82,7 @@ func MetricInit(ctx context.Context, log *zap.SugaredLogger, projectID, serviceN
 		metric.WithReader(metric.NewPeriodicReader(exporter)),
 		metric.WithResource(rsrc),
 	)
-	global.SetMeterProvider(provider)
+	otel.SetMeterProvider(provider)
 
 	return nil
 }
