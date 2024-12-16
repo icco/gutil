@@ -1,6 +1,6 @@
 module github.com/icco/gutil
 
-go 1.20
+go 1.23
 
 require (
 	github.com/go-chi/chi/v5 v5.2.0
