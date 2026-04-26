@@ -12,15 +12,45 @@ import (
 )
 
 // Middleware is a middleware for writing structured request logs. It uses a chi
-// Chain to make sure all of the deps are properly included (RequestID and
-// Recoverer).
+// Chain to make sure all of the deps are properly included (RequestID,
+// per-request logger injection, and Recoverer).
+//
+// The injected logger is what FromContext returns inside handlers, so
+// downstream code gets the application's configured logger (decorated
+// with the chi request_id) instead of the "unknown" fallback FromContext
+// constructs when the context has no logger.
 func Middleware(log *zap.Logger) func(next http.Handler) http.Handler {
 	return chi.Chain(
 		middleware.RealIP,
 		middleware.RequestID,
+		InjectLogger(log.Sugar()),
 		Handler(log),
 		middleware.Recoverer,
 	).Handler
+}
+
+// InjectLogger attaches base to the request context so handlers calling
+// FromContext receive base (decorated with the chi request_id when
+// present) instead of the "unknown" logger FromContext builds for empty
+// contexts.
+//
+// It is safe to use without chi/middleware.RequestID; in that case the
+// request_id field is simply omitted. A nil base is replaced with a
+// no-op logger so handlers never receive nil.
+func InjectLogger(base *zap.SugaredLogger) func(next http.Handler) http.Handler {
+	if base == nil {
+		base = zap.NewNop().Sugar()
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fields := make([]any, 0, 2)
+			if id, ok := r.Context().Value(middleware.RequestIDKey).(string); ok && id != "" {
+				fields = append(fields, "request_id", id)
+			}
+			ctx := NewContext(r.Context(), base, fields...)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 // Handler does the actual work of the http middleware.
