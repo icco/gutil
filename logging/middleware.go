@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -50,6 +51,17 @@ func Handler(logger *zap.Logger) func(next http.Handler) http.Handler {
 
 			if requestID != "" {
 				fields = append(fields, zap.String("request-id", requestID))
+			}
+
+			// Correlate logs with the active OpenTelemetry span (if any).
+			// The app is responsible for installing a propagator/tracer; we
+			// just read whatever ended up on the request context.
+			if sc := trace.SpanContextFromContext(r.Context()); sc.IsValid() {
+				fields = append(fields,
+					zap.String("trace_id", sc.TraceID().String()),
+					zap.String("span_id", sc.SpanID().String()),
+					zap.Bool("trace_sampled", sc.IsSampled()),
+				)
 			}
 
 			logger.Info("request completed", fields...)
