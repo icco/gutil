@@ -14,3 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .DS_Store
+
+# Compiled example binaries (each example dir builds to a binary
+# matching its directory name when run as `go build .`).
+/examples/otel/otel
