@@ -3,19 +3,15 @@ package logging
 import (
 	"fmt"
 
-	"github.com/icco/zapdriver"
 	"go.uber.org/zap"
 )
 
-// NewLogger creates a logger with stackdriver settings.
+// NewLogger creates a production zap logger tagged with the given service name.
 func NewLogger(serviceName string) (*zap.SugaredLogger, error) {
-	config := zapdriver.NewProductionConfig()
+	config := zap.NewProductionConfig()
 	config.Level.SetLevel(zap.DebugLevel)
 
-	logger, err := config.Build(zapdriver.WrapCore(
-		zapdriver.ReportAllErrors(true),
-		zapdriver.ServiceName(serviceName),
-	))
+	logger, err := config.Build(zap.Fields(zap.String("service", serviceName)))
 	if err != nil {
 		return nil, fmt.Errorf("logger create: %w", err)
 	}

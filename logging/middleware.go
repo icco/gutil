@@ -1,32 +1,30 @@
 package logging
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/icco/zapdriver"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-// Middleware is a middleware for writing request logs in a structured format to
-// stackdriver. It uses a chi Chain to make sure all of the deps are properly
-// included (RequestID and Recoverer).
-func Middleware(log *zap.Logger, projectID string) func(next http.Handler) http.Handler {
+// Middleware is a middleware for writing structured request logs. It uses a chi
+// Chain to make sure all of the deps are properly included (RequestID and
+// Recoverer).
+func Middleware(log *zap.Logger) func(next http.Handler) http.Handler {
 	return chi.Chain(
 		middleware.RealIP,
 		middleware.RequestID,
-		Handler(log, projectID),
+		Handler(log),
 		middleware.Recoverer,
 	).Handler
 }
 
 // Handler does the actual work of the http middleware.
-func Handler(logger *zap.Logger, projectID string) func(next http.Handler) http.Handler {
+func Handler(logger *zap.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -39,38 +37,34 @@ func Handler(logger *zap.Logger, projectID string) func(next http.Handler) http.
 			next.ServeHTTP(ww, r)
 			latency := time.Since(start)
 
-			payload := zapdriver.NewHTTP(r, nil)
-			payload.Status = ww.Status()
-			payload.Latency = fmt.Sprintf("%.9fs", latency.Seconds())
-			payload.ResponseSize = fmt.Sprintf("%d", ww.BytesWritten())
-
-			var fields []zapcore.Field
-			trace, span, sampled := ParseTraceHeader(r.Header.Get("X-Cloud-Trace-Context"))
-			if trace != "" {
-				fields = append(fields, zapdriver.TraceContext(trace, span, sampled, projectID)...)
+			fields := []zapcore.Field{
+				zap.String("http.method", r.Method),
+				zap.String("http.url", r.URL.String()),
+				zap.String("http.remote", r.RemoteAddr),
+				zap.String("http.user_agent", r.UserAgent()),
+				zap.String("http.referer", r.Referer()),
+				zap.String("http.proto", r.Proto),
+				zap.Int("http.status", ww.Status()),
+				zap.Int("http.response_size", ww.BytesWritten()),
+				zap.Duration("http.latency", latency),
 			}
-			fields = append(fields, zapdriver.HTTP(payload))
 
 			if requestID != "" {
 				fields = append(fields, zap.String("request-id", requestID))
 			}
 
+			// Correlate logs with the active OpenTelemetry span (if any).
+			// The app is responsible for installing a propagator/tracer; we
+			// just read whatever ended up on the request context.
+			if sc := trace.SpanContextFromContext(r.Context()); sc.IsValid() {
+				fields = append(fields,
+					zap.String("trace_id", sc.TraceID().String()),
+					zap.String("span_id", sc.SpanID().String()),
+					zap.Bool("trace_sampled", sc.IsSampled()),
+				)
+			}
+
 			logger.Info("request completed", fields...)
 		})
 	}
-}
-
-// ParseTraceHeader takes a GCP trace header and translates it to a trace,
-// span, and whether or not this was sampled.
-func ParseTraceHeader(header string) (string, string, bool) {
-	if header == "" {
-		return "", "", false
-	}
-
-	pieces := strings.Split(header, "/")
-	if len(pieces) != 2 {
-		return "", "", false
-	}
-
-	return pieces[0], pieces[1], true
 }
