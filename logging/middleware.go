@@ -21,7 +21,6 @@ import (
 // constructs when the context has no logger.
 func Middleware(log *zap.Logger) func(next http.Handler) http.Handler {
 	return chi.Chain(
-		middleware.RealIP,
 		middleware.RequestID,
 		InjectLogger(log.Sugar()),
 		Handler(log),
