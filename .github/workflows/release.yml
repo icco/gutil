@@ -23,8 +23,10 @@ jobs:
         uses: PaulHatch/semantic-version@v6.0.3
         with:
           tag_prefix: v
-          major_pattern: 'BREAKING CHANGE:'
-          minor_pattern: 'feat:'
+          # Patterns must be wrapped in / / to be treated as regexes. A bare string is
+          # a literal substring match, so 'feat:' misses scoped commits like 'feat(x):'.
+          major_pattern: '/!:|BREAKING CHANGE:/'
+          minor_pattern: '/feat(\(.+\))?:/'
           version_format: ${major}.${minor}.${patch}
       - name: Create and push tag
         if: steps.versioning.outputs.changed == 'true'
