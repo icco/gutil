@@ -147,7 +147,10 @@ func Do(client *http.Client, req *http.Request, sign func(*http.Request)) (*http
 	if sign != nil {
 		sign(req)
 	}
-	resp, err := client.Do(req)
+	// gosec flags the caller-supplied URL as an SSRF taint. That is inherent to a
+	// generic HTTP helper: Do exists to send a request the caller already built,
+	// and validating its destination is the caller's job, not this package's.
+	resp, err := client.Do(req) //nolint:gosec // G704: destination is the caller's to validate
 	if err != nil {
 		return nil, ErrTransport
 	}

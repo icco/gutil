@@ -304,8 +304,9 @@ func TestDoTransportErrorHidesURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = Do(&http.Client{Timeout: time.Second}, req, nil)
+	resp, err := Do(&http.Client{Timeout: time.Second}, req, nil)
 	if err == nil {
+		_ = resp.Body.Close()
 		t.Fatal("Do to a closed server = nil, want an error")
 	}
 	if !errors.Is(err, ErrTransport) {
