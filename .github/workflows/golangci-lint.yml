@@ -24,5 +24,3 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
-          # Linters are configured in .golangci.yml, not here, so a local run
-          # and a CI run enforce the same set.
