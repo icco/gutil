@@ -211,3 +211,19 @@ func TestVersionIsSet(t *testing.T) {
 		t.Error("Version is empty")
 	}
 }
+
+// A handler that neither writes nor sets a status leaves hw.status at 0, and
+// res.WriteHeader(0) panics in net/http as an invalid status code. Returning
+// without writing is a perfectly ordinary thing for a handler to do.
+func TestHandlerNoWriteAtAll(t *testing.T) {
+	t.Parallel()
+	w := serve(t, false, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil),
+		func(http.ResponseWriter, *http.Request) {})
+
+	if w.Code != http.StatusOK {
+		t.Errorf("status = %d, want an implicit 200", w.Code)
+	}
+	if got := w.Header().Get(headers.ETag); got != "" {
+		t.Errorf("ETag = %q, want none for an empty body", got)
+	}
+}
