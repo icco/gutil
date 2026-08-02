@@ -77,7 +77,7 @@ genai reports thinking separately in `ThoughtsTokenCount` and does **not** inclu
 
 Two consequences the API is shaped around:
 
-- `Usage` is populated even when `Generate` returns an error. An empty response still cost money, and a caller enforcing a budget needs to know. Same for a `GenerateJSON` decode failure.
+- The returned `*Response` is never nil, so a caller tracking spend reads `Usage` unconditionally. It is populated whenever the API reported it — including the `ErrEmptyResponse` and decode-failure paths, which still cost money — and zero when the call never reached the model.
 - `ThinkingBudget` is easy to reach for. `vertex.NoThinking()` sets it to zero, which is usually right for classification and extraction — thinking bills whether or not it improved the answer.
 
 ## Notes

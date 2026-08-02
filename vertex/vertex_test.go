@@ -154,7 +154,8 @@ func TestGenerateReturnsText(t *testing.T) {
 
 // The whole reason this package exists. genai reports thinking tokens
 // separately and excludes them from CandidatesTokenCount, but the bill counts
-// them as output. Reading only CandidatesTokenCount here would undercount 6x.
+// them as output. Reading only CandidatesTokenCount here would report 77 of the
+// 735 billable output tokens — a 9.5x undercount.
 func TestUsageFoldsThinkingIntoOutput(t *testing.T) {
 	t.Parallel()
 	c, _ := stub(t, stubResponse("answer", 100, 77, 658))
@@ -425,4 +426,39 @@ func payload(t *testing.T, seen *map[string]any) string {
 		t.Fatalf("marshal seen request: %v", err)
 	}
 	return string(b)
+}
+
+// Generate must never hand back a nil Response, so a caller tracking spend can
+// read Usage without a nil check on every path.
+func TestGenerateAlwaysReturnsAResponse(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	c, err := New(t.Context(), Config{APIKey: "k", BaseURL: srv.URL})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	resp, err := c.Generate(t.Context(), Request{Parts: Text("hi")})
+	if err == nil {
+		t.Fatal("Generate on a 500 = nil, want an error")
+	}
+	if resp == nil {
+		t.Fatal("Response = nil on an API error; callers must not have to nil-check")
+	}
+	if resp.Usage != (Usage{}) {
+		t.Errorf("Usage = %+v, want zero when the call never reached the model", resp.Usage)
+	}
+
+	// Same contract for the empty-parts guard, which never leaves the process.
+	resp, err = c.Generate(t.Context(), Request{})
+	if err == nil {
+		t.Fatal("Generate with no parts = nil, want an error")
+	}
+	if resp == nil {
+		t.Fatal("Response = nil on a validation error")
+	}
 }

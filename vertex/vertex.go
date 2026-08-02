@@ -153,13 +153,16 @@ type Response struct {
 
 // Generate performs one call and returns the response text.
 //
+// The returned Response is never nil, so a caller enforcing a budget can read
+// Usage unconditionally. It is populated whenever the API reported it, which
+// includes the ErrEmptyResponse case — an empty answer still costs money — and
+// is zero when the call never reached the model.
+//
 // It returns ErrEmptyResponse when the model produces no text, which happens on
-// a safety block or an exhausted output budget. Usage is populated whenever the
-// API reported it, including alongside ErrEmptyResponse — an empty answer still
-// costs money, and a caller enforcing a budget needs to know.
+// a safety block or an exhausted output budget.
 func (c *Client) Generate(ctx context.Context, r Request) (*Response, error) {
 	if len(r.Parts) == 0 {
-		return nil, errors.New("vertex: Request.Parts is empty")
+		return &Response{}, errors.New("vertex: Request.Parts is empty")
 	}
 
 	cfg := &genai.GenerateContentConfig{}
@@ -184,7 +187,9 @@ func (c *Client) Generate(ctx context.Context, r Request) (*Response, error) {
 
 	resp, err := c.genai.Models.GenerateContent(ctx, model, []*genai.Content{{Parts: r.Parts}}, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("vertex: generate: %w", err)
+		// Non-nil with zero Usage: the call never reached the model, so there is
+		// nothing to bill, but the caller should not have to nil-check.
+		return &Response{}, fmt.Errorf("vertex: generate: %w", err)
 	}
 
 	out := &Response{Usage: usageOf(resp)}
@@ -199,8 +204,8 @@ func (c *Client) Generate(ctx context.Context, r Request) (*Response, error) {
 // Request.Schema so the model is constrained to produce parseable output;
 // without it the model is free to wrap the JSON in prose and this will fail.
 //
-// The Response is returned even on a decode failure, so its Usage still counts
-// against a budget.
+// As with Generate, the returned Response is never nil, so its Usage still
+// counts against a budget even on a decode failure.
 func (c *Client) GenerateJSON(ctx context.Context, r Request, v any) (*Response, error) {
 	resp, err := c.Generate(ctx, r)
 	if err != nil {
