@@ -56,7 +56,9 @@ func (l *Limiter) Allow() bool {
 	defer l.mu.Unlock()
 
 	now := l.nowFunc()
-	for len(l.events) > 0 && now.Sub(l.events[0]) > l.window {
+	// A trailing window covers (now-window, now], so an event exactly window old
+	// has aged out and its capacity is free again.
+	for len(l.events) > 0 && now.Sub(l.events[0]) >= l.window {
 		l.events = l.events[1:]
 	}
 	if len(l.events) < l.max {

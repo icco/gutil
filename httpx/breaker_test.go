@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -53,6 +54,117 @@ func TestBreakerHalfOpensAfterTimeout(t *testing.T) {
 	}
 	if b.state != stateHalfOpen {
 		t.Errorf("state = %v, want half-open", b.state)
+	}
+}
+
+// Half-open must admit exactly one probe. Letting every waiting caller through
+// the moment the timeout expires aims the full pre-breaker load at a service
+// that has not been shown healthy yet — the thing the breaker exists to stop.
+func TestBreakerHalfOpenAdmitsOneTrial(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	b := NewBreaker(1, time.Minute)
+	b.nowFunc = func() time.Time { return now }
+
+	b.RecordFailure()
+	now = now.Add(2 * time.Minute)
+
+	if !b.Allow() {
+		t.Fatal("first Allow() after timeout = false, want the trial")
+	}
+	for i := range 3 {
+		if b.Allow() {
+			t.Fatalf("Allow() #%d during an in-flight trial = true, want false", i+2)
+		}
+	}
+}
+
+func TestBreakerHalfOpenAdmitsAgainAfterTrialResolves(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	b := NewBreaker(1, time.Minute)
+	b.nowFunc = func() time.Time { return now }
+
+	b.RecordFailure()
+	now = now.Add(2 * time.Minute)
+	if !b.Allow() {
+		t.Fatal("setup: expected a trial")
+	}
+	b.RecordSuccess()
+
+	// Closed again, so traffic flows freely.
+	for i := range 3 {
+		if !b.Allow() {
+			t.Errorf("Allow() #%d after a successful trial = false, want true", i+1)
+		}
+	}
+}
+
+// A trial whose caller never reports back — cancelled context, panic, an early
+// return before Record* — must not wedge the breaker shut forever.
+func TestBreakerHalfOpenTrialSelfHeals(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	b := NewBreaker(1, time.Minute)
+	b.nowFunc = func() time.Time { return now }
+
+	b.RecordFailure()
+	now = now.Add(2 * time.Minute)
+	if !b.Allow() {
+		t.Fatal("setup: expected a trial")
+	}
+	if b.Allow() {
+		t.Fatal("setup: second Allow() should be gated")
+	}
+
+	// The trial never resolved. After another timeout, admit a fresh one.
+	now = now.Add(2 * time.Minute)
+	if !b.Allow() {
+		t.Error("Allow() after an abandoned trial aged out = false, want a fresh trial")
+	}
+}
+
+// Concurrent callers arriving the instant the timeout expires must not all slip
+// through: exactly one gets the probe.
+func TestBreakerHalfOpenTrialIsConcurrencySafe(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	b := NewBreaker(1, time.Minute)
+	b.nowFunc = func() time.Time { return now }
+
+	b.RecordFailure()
+	now = now.Add(2 * time.Minute)
+
+	var mu sync.Mutex
+	admitted := 0
+	var wg sync.WaitGroup
+	for range 50 {
+		wg.Go(func() {
+			if b.Allow() {
+				mu.Lock()
+				admitted++
+				mu.Unlock()
+			}
+		})
+	}
+	wg.Wait()
+
+	if admitted != 1 {
+		t.Errorf("admitted = %d concurrent callers, want exactly 1", admitted)
+	}
+}
+
+// The breaker is open for exactly timeout, not timeout plus an instant.
+func TestBreakerReopensAtExactlyTimeout(t *testing.T) {
+	t.Parallel()
+	now := time.Now()
+	b := NewBreaker(1, time.Minute)
+	b.nowFunc = func() time.Time { return now }
+
+	b.RecordFailure()
+	now = now.Add(time.Minute)
+	if !b.Allow() {
+		t.Error("Allow() at exactly timeout = false, want true")
 	}
 }
 
