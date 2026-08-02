@@ -49,6 +49,11 @@ func (hw *hashWriter) Write(b []byte) (int, error) {
 }
 
 func writeRaw(res http.ResponseWriter, hw hashWriter) {
+	// A handler that returns without writing anything leaves status at 0, and
+	// net/http panics on WriteHeader(0). Go treats an unwritten response as 200.
+	if hw.status == 0 {
+		hw.status = http.StatusOK
+	}
 	res.WriteHeader(hw.status)
 	// Writing to a status that forbids a body returns http.ErrBodyNotAllowed
 	// even for zero bytes, which used to panic this middleware on every 204.
