@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"google.golang.org/genai"
@@ -47,6 +48,13 @@ type Config struct {
 	Model string
 	// BaseURL overrides the API endpoint, mostly so tests can point at a stub.
 	BaseURL string
+	// HTTPClient overrides the HTTP client, for a caller that wants its own
+	// timeout, transport, or instrumentation.
+	//
+	// On the Vertex backend this also takes over authentication: genai skips
+	// Application Default Credentials entirely when a client is supplied, so the
+	// client must carry its own.
+	HTTPClient *http.Client
 }
 
 // Client talks to one Gemini backend.
@@ -80,6 +88,9 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 
 	if cfg.BaseURL != "" {
 		gc.HTTPOptions.BaseURL = cfg.BaseURL
+	}
+	if cfg.HTTPClient != nil {
+		gc.HTTPClient = cfg.HTTPClient
 	}
 
 	c, err := genai.NewClient(ctx, gc)

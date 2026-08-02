@@ -95,9 +95,13 @@ func TestNewKeepsExplicitModel(t *testing.T) {
 	}
 }
 
+// The Vertex backend normally resolves Application Default Credentials at
+// construction, which a CI runner does not have. Supplying an HTTPClient makes
+// authentication the caller's problem and skips that lookup — which is the same
+// reason the option exists for real callers with their own transport.
 func TestNewVertexBackend(t *testing.T) {
 	t.Parallel()
-	c, err := New(t.Context(), Config{Project: "my-project"})
+	c, err := New(t.Context(), Config{Project: "my-project", HTTPClient: &http.Client{}})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -105,6 +109,35 @@ func TestNewVertexBackend(t *testing.T) {
 		t.Error("Raw() = nil")
 	}
 }
+
+func TestConfigHTTPClientIsUsed(t *testing.T) {
+	t.Parallel()
+	used := false
+	hc := &http.Client{Transport: rtFunc(func(r *http.Request) (*http.Response, error) {
+		used = true
+		return http.DefaultTransport.RoundTrip(r)
+	})}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(stubResponse("ok", 1, 1, 0)))
+	}))
+	defer srv.Close()
+
+	c, err := New(t.Context(), Config{APIKey: "k", BaseURL: srv.URL, HTTPClient: hc})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if _, err := c.Generate(t.Context(), Request{Parts: Text("hi")}); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if !used {
+		t.Error("the supplied http.Client was not used")
+	}
+}
+
+type rtFunc func(*http.Request) (*http.Response, error)
+
+func (f rtFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func TestGenerateReturnsText(t *testing.T) {
 	t.Parallel()
