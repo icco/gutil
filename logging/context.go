@@ -1,3 +1,5 @@
+// Package logging provides a zap-based structured logger wired for Google Cloud
+// Logging, plus context propagation and chi middleware.
 package logging
 
 import (
@@ -37,7 +39,9 @@ func NewContext(ctx context.Context, logger *zap.SugaredLogger, fields ...interf
 // "unknown" fallback logger. The fallback is constructed once and reused,
 // so repeated FromContext calls on bare contexts do not re-allocate a
 // fresh zap core each time.
-func FromContext(ctx context.Context) *zap.SugaredLogger {
+func FromContext(ctx context.Context) *zap.SugaredLogger { //nolint:contextcheck // the TODO below is a nil guard, not a derived context
+	// A nil ctx is a caller bug, but this is a logging helper: panicking here
+	// would turn a bad log line into an outage.
 	if ctx == nil {
 		ctx = context.TODO()
 	}

@@ -1,3 +1,5 @@
+// Package render writes JSON responses, logging rather than returning a write
+// failure so handlers can call it as a final statement.
 package render
 
 import (

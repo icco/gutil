@@ -1,0 +1,36 @@
+# GoReleaser configuration.
+# https://goreleaser.com
+version: 2
+project_name: gutil
+# This is a library, not a command: there is nothing to compile or ship. The
+# release exists for the changelog and the tag that `go get` resolves against.
+builds:
+  - skip: true
+changelog:
+  use: git
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^feat'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^fix'
+      order: 1
+    - title: Other Changes
+      order: 999
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^style:'
+release:
+  github:
+    owner: icco
+    name: gutil
+  mode: replace
+  footer: |
+    ---
+    Install with `go get github.com/icco/gutil@{{ .Tag }}`.
+
+    **Full Changelog**: https://github.com/icco/gutil/compare/{{ .PreviousTag }}...{{ .Tag }}

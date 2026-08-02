@@ -35,14 +35,14 @@ type Limiter struct {
 	sleepDur time.Duration
 }
 
-// NewLimiter returns a Limiter allowing max events per window. A max below 1 is
-// treated as 1, so a misconfigured limiter throttles rather than deadlocks.
-func NewLimiter(max int, window time.Duration) *Limiter {
-	if max < 1 {
-		max = 1
+// NewLimiter returns a Limiter allowing maxEvents per window. A value below 1
+// is treated as 1, so a misconfigured limiter throttles rather than deadlocks.
+func NewLimiter(maxEvents int, window time.Duration) *Limiter {
+	if maxEvents < 1 {
+		maxEvents = 1
 	}
 	return &Limiter{
-		max:      max,
+		max:      maxEvents,
 		window:   window,
 		nowFunc:  time.Now,
 		sleepDur: pollInterval,

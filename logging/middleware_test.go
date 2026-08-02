@@ -57,11 +57,11 @@ func TestInjectLoggerWithoutRequestID(t *testing.T) {
 	base := zap.New(core).With(zap.String("service", "test")).Sugar()
 
 	mw := InjectLogger(base)
-	handler := mw(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	handler := mw(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
 		FromContext(req.Context()).Infow("from-handler")
 	}))
 
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -83,7 +83,7 @@ func TestInjectLoggerWithoutRequestID(t *testing.T) {
 func TestInjectLoggerNilBase(t *testing.T) {
 	called := false
 	mw := InjectLogger(nil)
-	handler := mw(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	handler := mw(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
 		called = true
 		// FromContext must not return nil even though we passed nil in.
 		if log := FromContext(req.Context()); log == nil {
@@ -91,7 +91,7 @@ func TestInjectLoggerNilBase(t *testing.T) {
 		}
 	}))
 
-	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil))
 	if !called {
 		t.Error("handler not called")
 	}
