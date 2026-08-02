@@ -27,7 +27,6 @@ func TestFromTime(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			have := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), tc.Hour, tc.Minute, tc.Second, 0, time.UTC)
 			if got := FromTime(have); got.String() != tc.Want {

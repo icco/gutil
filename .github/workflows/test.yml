@@ -4,15 +4,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      COVERAGE_THRESHOLD: "80"
     steps:
       - uses: actions/checkout@v7
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: 1.25.x
+          go-version-file: go.mod
       - name: Install dependencies
         run: go get .
       - name: Build
         run: go build -v ./...
-      - name: Test with the Go CLI
-        run: go test -v ./...
+      - name: Test with coverage
+        run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Enforce coverage threshold
+        run: |
+          total=$(go tool cover -func=coverage.out | awk '/^total:/ {print $3}' | tr -d '%')
+          echo "Total coverage: ${total}% (threshold: ${COVERAGE_THRESHOLD}%)"
+          awk -v c="$total" -v t="$COVERAGE_THRESHOLD" \
+            'BEGIN { if (c+0 < t+0) { exit 1 } }' || {
+              echo "::error::coverage ${total}% is below threshold ${COVERAGE_THRESHOLD}%"
+              exit 1
+            }

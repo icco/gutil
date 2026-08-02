@@ -12,12 +12,15 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
     steps:
       - uses: actions/checkout@v7
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
-          args: -E bodyclose,misspell,gosec,goconst,errorlint

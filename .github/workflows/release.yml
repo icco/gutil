@@ -1,0 +1,44 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Full history, so semantic versioning can read the log.
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Determine next version
+        id: versioning
+        uses: PaulHatch/semantic-version@v6.0.3
+        with:
+          tag_prefix: v
+          major_pattern: 'BREAKING CHANGE:'
+          minor_pattern: 'feat:'
+          version_format: ${major}.${minor}.${patch}
+      - name: Create and push tag
+        if: steps.versioning.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.versioning.outputs.version_tag }}"
+          git push origin "${{ steps.versioning.outputs.version_tag }}"
+      - name: Run GoReleaser
+        if: steps.versioning.outputs.changed == 'true'
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: ~> v2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

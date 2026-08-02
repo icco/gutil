@@ -1,3 +1,6 @@
+// Package etag provides HTTP ETag middleware: it hashes a handler's response
+// body, sets the ETag header, and answers a matching conditional request with
+// 304 Not Modified.
 package etag
 
 import (
@@ -46,7 +49,17 @@ func (hw *hashWriter) Write(b []byte) (int, error) {
 }
 
 func writeRaw(res http.ResponseWriter, hw hashWriter) {
+	// A handler that returns without writing anything leaves status at 0, and
+	// net/http panics on WriteHeader(0). Go treats an unwritten response as 200.
+	if hw.status == 0 {
+		hw.status = http.StatusOK
+	}
 	res.WriteHeader(hw.status)
+	// Writing to a status that forbids a body returns http.ErrBodyNotAllowed
+	// even for zero bytes, which used to panic this middleware on every 204.
+	if hw.buf.Len() == 0 {
+		return
+	}
 	if _, err := res.Write(hw.buf.Bytes()); err != nil {
 		panic(fmt.Errorf("could not write: %w", err))
 	}
@@ -80,10 +93,9 @@ func Handler(weak bool) func(next http.Handler) http.Handler {
 			resHeader.Set(headers.ETag, etag)
 
 			if fresh.IsFresh(req.Header, resHeader) {
+				// 304 carries no body; the write that used to follow this could
+				// only ever return http.ErrBodyNotAllowed.
 				res.WriteHeader(http.StatusNotModified)
-				if _, err := res.Write(nil); err != nil {
-					panic(fmt.Errorf("could not write: %w", err))
-				}
 			} else {
 				writeRaw(res, hw)
 			}
