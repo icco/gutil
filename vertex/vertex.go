@@ -185,7 +185,12 @@ func (c *Client) Generate(ctx context.Context, r Request) (*Response, error) {
 		model = c.model
 	}
 
-	resp, err := c.genai.Models.GenerateContent(ctx, model, []*genai.Content{{Parts: r.Parts}}, cfg)
+	// The role is explicit because genai does not default it on request contents
+	// (only on the system instruction), and Vertex AI rejects a roleless content:
+	// "Please use a valid role: user, model."
+	contents := []*genai.Content{{Role: genai.RoleUser, Parts: r.Parts}}
+
+	resp, err := c.genai.Models.GenerateContent(ctx, model, contents, cfg)
 	if err != nil {
 		// Non-nil with zero Usage: the call never reached the model, so there is
 		// nothing to bill, but the caller should not have to nil-check.
