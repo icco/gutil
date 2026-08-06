@@ -228,6 +228,23 @@ func TestGenerateSendsSystemInstruction(t *testing.T) {
 	}
 }
 
+// The user turn must carry an explicit role. genai defaults the role on the
+// system instruction only, never on the request contents, and Vertex AI rejects
+// a roleless content outright: "Please use a valid role: user, model." The
+// Gemini API backend accepts it, so a stub or an API-key caller will not catch
+// this — hence an assertion on the wire format.
+func TestGenerateSendsUserRole(t *testing.T) {
+	t.Parallel()
+	c, seen := stub(t, stubResponse("ok", 1, 1, 0))
+
+	if _, err := c.Generate(t.Context(), Request{Parts: Text("hi")}); err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if got := contentRole(t, seen); got != genai.RoleUser {
+		t.Errorf("contents[0].role = %q, want %q: %s", got, genai.RoleUser, payload(t, seen))
+	}
+}
+
 // A schema must also force the JSON response type; asking for a schema and
 // getting prose back is the failure this prevents.
 func TestGenerateSchemaForcesJSONMIMEType(t *testing.T) {
@@ -426,6 +443,23 @@ func payload(t *testing.T, seen *map[string]any) string {
 		t.Fatalf("marshal seen request: %v", err)
 	}
 	return string(b)
+}
+
+// contentRole reports the role on the first request content, or "" if unset.
+func contentRole(t *testing.T, seen *map[string]any) string {
+	t.Helper()
+	var req struct {
+		Contents []struct {
+			Role string `json:"role"`
+		} `json:"contents"`
+	}
+	if err := json.Unmarshal([]byte(payload(t, seen)), &req); err != nil {
+		t.Fatalf("decode seen request: %v", err)
+	}
+	if len(req.Contents) == 0 {
+		t.Fatalf("request sent no contents: %s", payload(t, seen))
+	}
+	return req.Contents[0].Role
 }
 
 // Generate must never hand back a nil Response, so a caller tracking spend can
