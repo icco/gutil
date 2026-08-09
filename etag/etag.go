@@ -61,7 +61,10 @@ func writeRaw(res http.ResponseWriter, hw hashWriter) {
 		return
 	}
 	if _, err := res.Write(hw.buf.Bytes()); err != nil {
-		panic(fmt.Errorf("could not write: %w", err))
+		// The client disconnecting mid-response (broken pipe, connection
+		// reset) is routine on a public server, not a program error: there's
+		// nothing left to write to, so just give up on this response.
+		return
 	}
 }
 
