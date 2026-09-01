@@ -9,7 +9,7 @@ require (
 	github.com/unrolled/render v1.7.0
 	go.opentelemetry.io/otel/trace v1.46.0
 	go.uber.org/zap v1.28.0
-	google.golang.org/genai v1.69.0
+	google.golang.org/genai v1.70.0
 )
 
 require (
