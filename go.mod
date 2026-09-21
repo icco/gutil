@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
-	github.com/unrolled/render v1.7.0
+	github.com/unrolled/render v1.8.1
 	go.opentelemetry.io/otel/trace v1.46.0
 	go.uber.org/zap v1.28.0
 	google.golang.org/genai v1.71.0
