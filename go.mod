@@ -1,4 +1,4 @@
-module github.com/icco/gutil
+module go.icco.me/gutil
 
 go 1.26.0
 

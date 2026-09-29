@@ -5,12 +5,12 @@ HTTP etag support middleware for Go.
 ## Installation
 
 ```
-go get -u -d -v github.com/icco/gutil/etag
+go get -u -d -v go.icco.me/gutil/etag
 ```
 
 ## Documentation
 
-API documentation can be found here: https://godoc.org/github.com/icco/gutil/etag
+API documentation can be found here: https://pkg.go.dev/go.icco.me/gutil/etag
 
 ## Usage
 
@@ -18,7 +18,7 @@ API documentation can be found here: https://godoc.org/github.com/icco/gutil/eta
 package main
 
 import (
-  "github.com/icco/gutil/etag"
+  "go.icco.me/gutil/etag"
   "github.com/go-chi/chi/v5"
 )
 
