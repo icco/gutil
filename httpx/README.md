@@ -7,12 +7,12 @@ Extracted from [icco/recommender](https://github.com/icco/recommender), where tw
 ## Installation
 
 ```
-go get -u -d -v github.com/icco/gutil/httpx
+go get -u -d -v go.icco.me/gutil/httpx
 ```
 
 ## Documentation
 
-API documentation can be found here: https://pkg.go.dev/github.com/icco/gutil/httpx
+API documentation can be found here: https://pkg.go.dev/go.icco.me/gutil/httpx
 
 ## Usage
 
@@ -28,7 +28,7 @@ import (
   "net/http"
   "time"
 
-  "github.com/icco/gutil/httpx"
+  "go.icco.me/gutil/httpx"
 )
 
 var errNotFound = errors.New("not found")

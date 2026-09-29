@@ -25,6 +25,6 @@ release:
   mode: replace
   footer: |
     ---
-    Install with `go get github.com/icco/gutil@{{ .Tag }}`.
+    Install with `go get go.icco.me/gutil@{{ .Tag }}`.
 
     **Full Changelog**: https://github.com/icco/gutil/compare/{{ .PreviousTag }}...{{ .Tag }}

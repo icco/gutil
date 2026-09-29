@@ -7,12 +7,12 @@ It exists because five repos had each hand-rolled the same twenty lines, and one
 ## Installation
 
 ```
-go get -u -d -v github.com/icco/gutil/vertex
+go get -u -d -v go.icco.me/gutil/vertex
 ```
 
 ## Documentation
 
-API documentation can be found here: https://pkg.go.dev/github.com/icco/gutil/vertex
+API documentation can be found here: https://pkg.go.dev/go.icco.me/gutil/vertex
 
 ## Usage
 
