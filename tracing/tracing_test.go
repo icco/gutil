@@ -49,8 +49,10 @@ func TestInitExportsSpans(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", srv.URL)
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "")
 	t.Setenv("OTEL_TRACES_EXPORTER", "")
 	t.Setenv("OTEL_SDK_DISABLED", "")
+	t.Setenv("OTEL_TRACES_SAMPLER", "always_on")
 
 	ctx := context.Background()
 	shutdown, err := Init(ctx, "alice")
